@@ -45,6 +45,12 @@ parser.add_argument(
     required=False,
 )
 parser.add_argument(
+    '--only_printable',
+    help='Only attempt combinations using printable characters',
+    default=False,
+    required=False,
+)
+parser.add_argument(
     '--unrar_path',
     help='Defines the path to the unrar executable, defaulting to the value from environment variables.',
     default='unrar',
@@ -59,6 +65,9 @@ parser.add_argument(
 parser.add_argument('--file', help='.rar file [file.rar]', type=str)
 
 args = parser.parse_args()
+
+if args.only_printable:
+    chars = printable
 
 
 def format_string(string):
