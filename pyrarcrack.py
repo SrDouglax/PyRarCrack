@@ -70,12 +70,14 @@ def format_string(string):
 
 def generate_combinations(alphabet, start, stop):
     """Gerar e testar combinações"""
+    current_index = 0
     for length in range(start, stop + 1):
+        current_index += 1
         for combination in product(alphabet, repeat=length):
-            yield ''.join(combination)
+            yield ''.join(combination), current_index
 
 
-def try_password(combination, z, v, b):
+def try_password(combination, attempt_count, total_attempts):
     """Tentar uma combinação de senha para desbloquear o arquivo .rar."""
     formated_combination = format_string(combination)
 
@@ -86,6 +88,10 @@ def try_password(combination, z, v, b):
         creationflags=CREATE_NO_WINDOW,
     )
     out, err = cmd.communicate()
+
+    if args.verbose and attempt_count % 100 == 0:
+        print(f'Trying: {attempt_count}...{
+              min(attempt_count+100, total_attempts)}/{total_attempts}')
 
     if args.unrar_lang == 'eng':
         ok_message = 'All OK'
@@ -104,13 +110,19 @@ if __name__ == '__main__':
     if args.stop < args.start:
         raise Exception('Stop number is less than start')
 
+    # Calcular o número total de combinações
+    total_attempts = sum(
+        len(chars) ** length for length in range(args.start, args.stop + 1))
+
     start_time = time()
+    attempt_count = 0
     # Multiprocessamento para testar combinações
     print("Started to generate and test combinations...")
     with Pool(cpu_count()) as pool:
-        for combination in generate_combinations(args.alphabet, args.start, args.stop):
+        for combination, current_index in generate_combinations(args.alphabet, args.start, args.stop):
             result = pool.apply_async(
-                try_password, (combination))
+                try_password, (combination, attempt_count, total_attempts))
+            attempt_count += 1
 
             if result.get():
                 print(f'Password found: {result.get()}')
