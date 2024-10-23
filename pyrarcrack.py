@@ -15,6 +15,7 @@ from subprocess import PIPE, Popen, CREATE_NO_WINDOW
 from multiprocessing import Pool, cpu_count
 from string import printable
 from time import time
+import signal
 import sys
 
 chars = (
@@ -70,6 +71,35 @@ if args.only_printable:
     chars = printable
 
 
+def handle_exit_signal(signal_received, frame):
+    """Função para capturar sinais e sair corretamente"""
+    global should_exit
+    should_exit = True
+    print("\nSignal received. Exiting gracefully...")
+
+
+# Capturar sinal de interrupção (Ctrl+C)
+signal.signal(signal.SIGINT, handle_exit_signal)
+
+# Variável global para controle de saída
+should_exit = False
+
+
+def save_progress(index):
+    """Salvar o progresso atual (índice) em um arquivo."""
+    with open('progress.txt', 'w') as f:
+        f.write(str(index))
+
+
+def load_progress():
+    """Carregar o progresso salvo (índice) de um arquivo."""
+    try:
+        with open('progress.txt', 'r') as f:
+            return int(f.read().strip())
+    except FileNotFoundError:
+        return 0  # Se o arquivo não existir, começar do zero
+
+
 def format_string(string):
     """Formatar caracteres especiais."""
     formated = map(
@@ -77,12 +107,14 @@ def format_string(string):
     return ''.join(formated)
 
 
-def generate_combinations(alphabet, start, stop):
+def generate_combinations(alphabet, start, stop, start_index):
     """Gerar e testar combinações"""
     current_index = 0
     for length in range(start, stop + 1):
-        current_index += 1
         for combination in product(alphabet, repeat=length):
+            current_index += 1
+            if current_index < start_index:
+                continue  # Pular combinações anteriores ao índice salvo
             yield ''.join(combination), current_index
 
 
@@ -107,7 +139,7 @@ def try_password(combination, attempt_count, total_attempts):
     elif args.unrar_lang == 'pt-br':
         ok_message = 'Tudo OK'
 
-    if ok_message in out.decode():
+    if ok_message in out.decode('latin1'):
         return combination
     return False
 
@@ -123,17 +155,30 @@ if __name__ == '__main__':
     total_attempts = sum(
         len(chars) ** length for length in range(args.start, args.stop + 1))
 
+    # Carregar o índice salvo
+    start_index = load_progress()
+    print(f"Starting from index: {start_index}")
+
     start_time = time()
-    attempt_count = 0
     # Multiprocessamento para testar combinações
     print("Started to generate and test combinations...")
     with Pool(cpu_count()) as pool:
-        for combination, current_index in generate_combinations(args.alphabet, args.start, args.stop):
+        for combination, current_index in generate_combinations(args.alphabet, args.start, args.stop, start_index):
+            # Checar se o sinal de saída foi recebido
+            if should_exit:
+                print("Exiting... Saving progress.")
+                save_progress(current_index)
+                sys.exit(0)
+
             result = pool.apply_async(
-                try_password, (combination, attempt_count, total_attempts))
-            attempt_count += 1
+                try_password, (combination, current_index, total_attempts))
+
+            # Salvar o progresso a cada 1000 combinações
+            if current_index % 1000 == 0:
+                save_progress(current_index)
 
             if result.get():
                 print(f'Password found: {result.get()}')
                 print(f'Time: {time() - start_time}')
+                save_progress(current_index)
                 sys.exit(0)
