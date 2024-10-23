@@ -46,13 +46,13 @@ parser.add_argument(
 )
 parser.add_argument(
     '--unrar_path',
-    help='Define the path to unrar',
+    help='Defines the path to the unrar executable, defaulting to the value from environment variables.',
     default='unrar',
     required=False,
 )
 parser.add_argument(
     '--unrar_lang',
-    help='Define the language of unrar messages',
+    help='--unrar_lang LANG     Specifies the language for unrar messages, which is necessary to detect when an operation is successful. [eng/pt-br]',
     default='eng',
     required=False,
 )

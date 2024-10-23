@@ -8,12 +8,14 @@ usage: pyrarcrack.py [-h] [--start START] [--stop STOP] [--verbose VERBOSE]
 Python combination generator to unrar
 
 optional arguments:
-  -h, --help           show this help message and exit
-  --start START        Number of characters of the initial string [1 -> "a", 2-> "aa"]
-  --stop STOP          Number of characters of the final string [3 -> "ßßß"]
-  --verbose VERBOSE    Show combintations
-  --alphabet ALPHABET  alternative chars to combinations
-  --file FILE          .rar file [file.rar]
+  -h, --help                Show this help message and exit
+  --start START             Number of characters of the initial string [1 -> "a", 2-> "aa"]
+  --stop STOP               Number of characters of the final string [3 -> "ßßß"]
+  --verbose VERBOSE         Show combintations
+  --alphabet ALPHABET       Alternative chars to combinations
+  --file FILE               .rar file [file.rar]
+  --unrar_path UNRAR_PATH   Defines the path to the unrar executable, defaulting to the value from environment variables
+  --unrar_lang UNRAR_LANG   Specifies the language for unrar messages, which is necessary to detect when an operation is successful. ['eng'/'pt-br']
 ```
 
 
