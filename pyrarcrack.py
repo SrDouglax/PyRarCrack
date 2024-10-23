@@ -40,8 +40,15 @@ parser.add_argument(
 
 parser.add_argument(
     '--alphabet',
-    help='alternative chars to combinations',
+    help='Alternative chars to combinations',
     default=chars,
+    required=False,
+)
+
+parser.add_argument(
+    '--unrar_path',
+    help='Define the path to unrar',
+    default='unrar',
     required=False,
 )
 
@@ -85,7 +92,7 @@ if __name__ == '__main__':
             print(f'Trying: {combination}')
 
         cmd = Popen(
-            f'unrar t -p{formated_combination} {args.file}'.split(),
+            f'{args.unrar} t -p{formated_combination} {args.file}'.split(),
             stdout=PIPE,
             stderr=PIPE,
         )
