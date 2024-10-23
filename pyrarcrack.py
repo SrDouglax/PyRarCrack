@@ -23,41 +23,43 @@ chars = (
 )
 special_chars = "();<>`|~\"&\'}]"
 
+# Argumentos da linha de comando
 parser = ArgumentParser(description='Python combination generator to unrar')
-
 parser.add_argument(
     '--start',
     help='Number of characters of the initial string [1 -> "a", 2 -> "aa"]',
     type=int,
 )
-
 parser.add_argument(
     '--stop',
     help='Number of characters of the final string [3 -> "ßßß"]',
     type=int,
 )
-
 parser.add_argument(
     '--verbose', help='Show combintations', default=False, required=False
 )
-
 parser.add_argument(
     '--alphabet',
     help='Alternative chars to combinations',
     default=chars,
     required=False,
 )
-
 parser.add_argument(
     '--unrar_path',
     help='Define the path to unrar',
     default='unrar',
     required=False,
 )
-
+parser.add_argument(
+    '--unrar_lang',
+    help='Define the language of unrar messages',
+    default='eng',
+    required=False,
+)
 parser.add_argument('--file', help='.rar file [file.rar]', type=str)
 
 args = parser.parse_args()
+
 
 def format_string(string):
     """Formatar caracteres especiais."""
@@ -73,7 +75,7 @@ def generate_combinations(alphabet, start, stop):
             yield ''.join(combination)
 
 
-def try_password(combination,z,v,b):
+def try_password(combination, z, v, b):
     """Tentar uma combinação de senha para desbloquear o arquivo .rar."""
     formated_combination = format_string(combination)
 
@@ -85,7 +87,12 @@ def try_password(combination,z,v,b):
     )
     out, err = cmd.communicate()
 
-    if 'All OK' in out.decode():
+    if args.unrar_lang == 'eng':
+        ok_message = 'All OK'
+    elif args.unrar_lang == 'pt-br':
+        ok_message = 'Tudo OK'
+
+    if ok_message in out.decode():
         return combination
     return False
 
